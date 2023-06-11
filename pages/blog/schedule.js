@@ -5,6 +5,7 @@ import PostBody from "components/post-body";
 import { TwoColumn, TwoColumnMain, TwoColumnSidebar} from "components/two-column";
 import ConvertBody from "components/convert-body";
 import Image from "next/legacy/image";
+import PostCategories from "../../components/post-categories";
 
 export default function Schedule({
   title,
@@ -36,7 +37,9 @@ export default function Schedule({
               <ConvertBody contentHTML={content} />
             </PostBody>
           </TwoColumnMain>
-          <TwoColumnSidebar></TwoColumnSidebar>
+          <TwoColumnSidebar>
+            <PostCategories categories={categories} />
+          </TwoColumnSidebar>
         </TwoColumn>
       </article>
     </Container>

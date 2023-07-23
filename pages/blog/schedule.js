@@ -8,7 +8,10 @@ import { TwoColumn, TwoColumnMain, TwoColumnSidebar} from "components/two-column
 import ConvertBody from "components/convert-body";
 import PostCategories from "components/post-categories";
 import Image from "next/legacy/image";
+import { getPlaiceholder } from "plaiceholder";
 
+// ローカルの代替アイキャッチ画像
+import { eyecatchLocal } from "lib/constants";
 
 export default function Schedule({
   title,
@@ -40,6 +43,8 @@ export default function Schedule({
             height={eyecatch.height}
             sizes="(min-width: 1152px) 1152px, 100vw"
             priority
+            placeholder="blur"
+            blurDataURL={eyecatch.blurDataURL}
           />
         </figure>
 
@@ -58,19 +63,57 @@ export default function Schedule({
   )
 }
 
+import path from "node:path";
+import fs from "node:fs/promises";
+
+const getImage = async (src) => {
+  const buffer = await fs.readFile(path.join("./public", src));
+
+  const {
+    metadata: { height, width },
+    ...plaiceholder
+  } = await getPlaiceholder(buffer, { size: 10 });
+
+  return {
+    ...plaiceholder,
+    img: { src, height, width },
+  };
+};
+
+const getImageRemote = async (src) => {
+  const buffer = await fetch(src).then(async (res) =>
+    Buffer.from(await res.arrayBuffer())
+  );
+
+  const {
+    metadata: { height, width },
+    ...plaiceholder
+  } = await getPlaiceholder(buffer, { size: 10 });
+
+  return {
+    ...plaiceholder,
+    img: { src, height, width },
+  };
+};
+
 export async function getStaticProps() {
-  const slug = 'schedule'
+  const slug = 'micro'
 
   const post = await getPostBySlug(slug)
 
   const description = extractText(post.content)
+
+  const eyecatch = post.eyecatch ?? eyecatchLocal
+
+  const { base64, img } = post.eyecatch ? await getImageRemote(eyecatch.url) : await getImage(eyecatch.url);
+  eyecatch.blurDataURL = base64
 
   return {
     props: {
       title: post.title,
       publish: post.publishDate,
       content: post.content,
-      eyecatch: post.eyecatch,
+      eyecatch: eyecatch,
       categories: post.categories,
       description: description,
     }
